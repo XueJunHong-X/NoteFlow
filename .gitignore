@@ -34,3 +34,5 @@ dist/
 
 # 本地核查脚本
 .tmp_redline.py
+.tmp_credread.py
+.tmp_credread.ps1
