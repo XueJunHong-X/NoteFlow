@@ -1,11 +1,12 @@
 # NoteFlow 一键构建脚本（Windows PowerShell 5+）
 #
 # 用法：
-#   .\build.ps1                # 默认构建到 2026-11-11\note-flow-competition\outputs\NoteFlow-exe
+#   .\build.ps1                # 默认构建到 2026-11-11\note-flow-competition\outputs\NoteFlow
 #   .\build.ps1 -SkipInstall   # 已装好依赖与 PyInstaller，跳过 pip
 #   .\build.ps1 -Console       # 构建带控制台窗口的版本（调试用）
+#   .\build.ps1 -DistRoot dist # 换产物输出目录（公开仓库使用者建议改成这个）
 #
-# 产物：outputs\NoteFlow-exe\NoteFlow.exe（--onedir，启动快、被杀软误报少）
+# 产物：<DistRoot>\NoteFlow\NoteFlow.exe（--onedir，启动快、被杀软误报少）
 
 param(
     [switch]$SkipInstall,

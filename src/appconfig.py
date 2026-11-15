@@ -18,8 +18,11 @@ from pathlib import Path
 
 APP_DIR_NAME = "NoteFlow"
 
-# 这台机器上约定的默认工作区。打包后如果它不存在（换机），退回用户目录。
-PREFERRED_WORKSPACE = Path("D:/Trae Work/Files/efficiency")
+# 约定的默认工作区。打包后如果它不存在（换机或别人的机器），自动退回用户目录。
+# 换路径：设环境变量 NOTEFLOW_WORKSPACE 即可（优先级最高）。
+PREFERRED_WORKSPACE = Path(
+    os.getenv("NOTEFLOW_PREFERRED_WORKSPACE") or "D:/Trae Work/Files/efficiency"
+)
 
 
 def _is_frozen() -> bool:

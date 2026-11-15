@@ -24,7 +24,9 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-OUT_DIR = ROOT / "2026-11-11" / "note-flow-competition" / "outputs" / "NoteFlow"
+# 产物目录：默认沿用备赛目录，可用环境变量 NOTEFLOW_DIST_ROOT 覆盖
+DIST_ROOT = Path(os.getenv("NOTEFLOW_DIST_ROOT") or (ROOT / "2026-11-11/note-flow-competition/outputs"))
+OUT_DIR = DIST_ROOT / "NoteFlow"
 EXE = OUT_DIR / "NoteFlow.exe"
 REPORT = ROOT / "package_report.json"
 ENV_FILE = ROOT / ".env"

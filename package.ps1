@@ -8,17 +8,20 @@
 # 明细固定写入仓库根的 package_report.json。
 
 param(
-    [switch]$SkipBuild
+    [switch]$SkipBuild,
+    # 产物输出根目录（默认沿用备赛目录；公开仓库使用者可改成 .\dist）
+    [string]$DistRoot = "2026-11-11\note-flow-competition\outputs"
 )
 
 $ErrorActionPreference = "Stop"
 $Root = $PSScriptRoot
-$Exe = Join-Path $Root "2026-11-11\note-flow-competition\outputs\NoteFlow\NoteFlow.exe"
+$DistDir = Join-Path $Root $DistRoot
+$Exe = Join-Path $DistDir "NoteFlow\NoteFlow.exe"
 
 if (-not $SkipBuild) {
     Write-Host "== [1/2] 构建（沿用 PyInstaller onedir 配置与产物路径）==" -ForegroundColor Cyan
     try {
-        & (Join-Path $Root "build.ps1") -SkipInstall
+        & (Join-Path $Root "build.ps1") -SkipInstall -DistRoot $DistRoot
     } catch {
         Write-Host "构建失败：$($_.Exception.Message)" -ForegroundColor Red
         exit 1
