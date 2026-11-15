@@ -1,0 +1,140 @@
+# NoteFlow 一键构建脚本（Windows PowerShell 5+）
+#
+# 用法：
+#   .\build.ps1                # 默认构建到 2026-11-11\note-flow-competition\outputs\NoteFlow-exe
+#   .\build.ps1 -SkipInstall   # 已装好依赖与 PyInstaller，跳过 pip
+#   .\build.ps1 -Console       # 构建带控制台窗口的版本（调试用）
+#
+# 产物：outputs\NoteFlow-exe\NoteFlow.exe（--onedir，启动快、被杀软误报少）
+
+param(
+    [switch]$SkipInstall,
+    [switch]$Console,
+    # 产物输出根目录（默认沿用备赛目录；公开仓库使用者可改成 .\dist）
+    [string]$DistRoot = "2026-11-11\note-flow-competition\outputs"
+)
+
+$ErrorActionPreference = "Stop"
+$RepoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+Set-Location $RepoRoot
+
+$Python = Join-Path $RepoRoot ".venv\Scripts\python.exe"
+if (-not (Test-Path $Python)) {
+    Write-Host "[1/4] 没有找到 .venv，改用系统 python" -ForegroundColor Yellow
+    $Python = "python"
+} else {
+    Write-Host "[1/4] 使用虚拟环境: $Python" -ForegroundColor Cyan
+}
+
+if (-not $SkipInstall) {
+    Write-Host "[2/4] 安装依赖（首次会下载几百 MB）..." -ForegroundColor Cyan
+    & $Python -m pip install --upgrade pip
+    & $Python -m pip install -r requirements.txt
+    & $Python -m pip install pyinstaller
+} else {
+    Write-Host "[2/4] 跳过依赖安装" -ForegroundColor DarkGray
+}
+
+$DistPath = Join-Path $RepoRoot $DistRoot
+$WorkPath = Join-Path $DistPath "..\work\pyinstaller"
+
+Write-Host "[3/4] 开始打包（onedir + 内置样例图 + 隐藏导入）..." -ForegroundColor Cyan
+
+# 只收集合成样例图（*.png）。tests\sample_images\real\ 是个人真实笔记，绝不能进安装包。
+$Staging = Join-Path $WorkPath "assets\sample_images"
+if (Test-Path $Staging) { Remove-Item $Staging -Recurse -Force }
+New-Item -ItemType Directory -Path $Staging -Force | Out-Null
+Copy-Item (Join-Path $RepoRoot "tests\sample_images\*.png") -Destination $Staging -Force
+Write-Host "      内置样例图: $((Get-ChildItem $Staging -File).Count) 张（不含 real 目录）" -ForegroundColor DarkGray
+
+$SampleData = $Staging + ";sample_images"
+
+$ArgsList = @(
+    "--noconfirm",
+    "--clean",
+    "--onedir",
+    "--name", "NoteFlow",
+    "--distpath", $DistPath,
+    "--workpath", $WorkPath,
+    "--specpath", $WorkPath,
+    # 把合成样例图打进去：没有仓库也能点「用内置样例演示」
+    "--add-data", $SampleData,
+    # 这几个模块是运行时才 import 的，PyInstaller 静态分析看不到
+    "--hidden-import", "cv2",
+    "--hidden-import", "numpy",
+    "--hidden-import", "PIL.Image",
+    "--hidden-import", "fitz",
+    "--hidden-import", "pymupdf",
+    "--hidden-import", "watchdog.observers",
+    "--hidden-import", "watchdog.observers.winapi",
+    "--hidden-import", "requests",
+    "--hidden-import", "src.loader",
+    "--hidden-import", "src.preprocessor",
+    "--hidden-import", "src.recognizer",
+    "--hidden-import", "src.markdown_gen",
+    "--hidden-import", "src.mindmap_gen",
+    "--hidden-import", "src.linker",
+    "--hidden-import", "src.organizer",
+    "--hidden-import", "src.watcher",
+    "--hidden-import", "src.failure_log",
+    "--hidden-import", "src.onedrive",
+    "--hidden-import", "src.appconfig",
+    "--hidden-import", "src.offline_samples",
+    "--hidden-import", "src.resources",
+    "--hidden-import", "src.controller",
+    "--hidden-import", "src.ui.theme",
+    "--hidden-import", "src.ui.widgets",
+    "--hidden-import", "src.ui.settings_dialog",
+    "--hidden-import", "src.ui.app",
+    "--hidden-import", "windnd",
+    # 体积控制：这些可选依赖用不到
+    "--exclude-module", "matplotlib",
+    "--exclude-module", "scipy",
+    "--exclude-module", "pandas",
+    "--exclude-module", "tkinter.test",
+    "--exclude-module", "test",
+    # 入口
+    "gui.py"
+)
+
+if ($Console) {
+    Write-Host "      构建带控制台版本（调试用）" -ForegroundColor DarkGray
+    $ArgsList = @("--console") + $ArgsList
+} else {
+    $ArgsList = @("--windowed") + $ArgsList
+}
+
+& $Python -m PyInstaller @ArgsList
+
+if ($LASTEXITCODE -ne 0) {
+    throw "打包失败，退出码 $LASTEXITCODE"
+}
+
+$Exe = Join-Path $DistPath "NoteFlow\NoteFlow.exe"
+if (-not (Test-Path $Exe)) {
+    throw "打包结束但找不到 $Exe"
+}
+
+# 体积裁剪：这两块运行时用不到，PyInstaller 的 hook 会把它们整包收进来。
+# opencv 的视频 I/O 编解码库（只做静态图处理）、PyMuPDF 的版面/表格 ONNX 模型（只做页面栅格化）。
+$Prune = @(
+    (Join-Path $DistPath "NoteFlow\_internal\cv2"),
+    (Join-Path $DistPath "NoteFlow\_internal\pymupdf\layout\resources\onnx")
+)
+foreach ($dir in $Prune) {
+    if (Test-Path $dir) {
+        Get-ChildItem $dir -File | Where-Object {
+            $_.Name -like "opencv_videoio_ffmpeg*" -or $_.Extension -eq ".onnx"
+        } | ForEach-Object {
+            Remove-Item $_.FullName -Force
+        }
+    }
+}
+
+$SizeMB = [math]::Round(((Get-ChildItem (Split-Path $Exe) -Recurse | Measure-Object Length -Sum).Sum / 1MB), 1)
+
+Write-Host "[4/4] 完成" -ForegroundColor Green
+Write-Host "      exe   : $Exe"
+Write-Host "      体积  : $SizeMB MB（整个 NoteFlow 目录）"
+Write-Host "      自检  : & `"$Exe`" --selftest"
+Write-Host "      命令行: & `"$Exe`" --cli --once --mock"

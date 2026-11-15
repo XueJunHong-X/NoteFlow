@@ -1,0 +1,33 @@
+# 依赖与缓存
+.venv/
+__pycache__/
+*.pyc
+
+# 密钥与本机配置（.env.example 是模板，允许提交）
+.env
+.env.*
+!.env.example
+config.json
+
+# 运行产物
+inbox/
+output/
+vault/
+
+# 用户真实笔记样本：仅本机使用，不提交
+tests/sample_images/real/
+
+# 备赛 / 压测 / 迁移中间产物（本机保留，不进仓库）
+2026-11-11/
+2026-11-12/
+2026-11-14/
+2026-11-15/
+.screenshots/
+.trae-html-share-packages/
+NoteFlow_项目记忆.md
+package_report.json
+
+# 打包中间件与构建产物
+build/
+dist/
+*.spec

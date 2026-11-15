@@ -1,0 +1,10 @@
+# NoteFlow P0 依赖（Python 3.10+）
+# 安装：python -m pip install -r requirements.txt
+
+watchdog>=3.0.0            # 文件夹监听
+opencv-python-headless>=4.8.0  # 图片预处理（headless 版无 GUI 依赖）
+Pillow>=10.0.0             # EXIF 校正、图片读取
+numpy>=1.24.0              # OpenCV 数组运算
+requests>=2.31.0           # 调用多模态模型接口
+PyMuPDF>=1.24.0            # PDF / 内嵌文档按页栅格化（无需外部 poppler）
+windnd>=1.0.7              # 桌面端拖拽（4KB 纯 ctypes，替代 tkinterdnd2）
