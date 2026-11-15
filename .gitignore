@@ -31,3 +31,6 @@ package_report.json
 build/
 dist/
 *.spec
+
+# 本地核查脚本
+.tmp_redline.py
