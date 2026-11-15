@@ -38,7 +38,18 @@ NoteFlow 做的不是「转文字」，而是**转成一份结构完整、能直
 
 ## 二、下载并运行（免安装）
 
-去 **[Releases](../../releases)** 下载 `NoteFlow-<版本>-win64.zip`：
+去 **[Releases](../../releases)** 下载 `NoteFlow-<版本>-win64.zip`。
+
+当前最新版本 **v0.1.0**：
+
+| 项 | 值 |
+|---|---|
+| 附件 | `NoteFlow-v0.1.0-win64.zip` |
+| 大小 | 84,806,446 字节（80.9 MiB） |
+| SHA-256 | `f6d507cf7cdfe44ca0caa3c814a4d1fb67e9dcfb550d9e20225874ba0ede49f5` |
+| 直链 | [NoteFlow-v0.1.0-win64.zip](https://github.com/XueJunHong-X/NoteFlow/releases/download/v0.1.0/NoteFlow-v0.1.0-win64.zip) |
+
+下载后可用 `Get-FileHash .\NoteFlow-v0.1.0-win64.zip -Algorithm SHA256` 核对完整性。
 
 1. 解压 zip，得到一个 `NoteFlow` 文件夹（**不要只拷 exe**，`_internal` 是它的运行库）；
 2. 双击 `NoteFlow.exe`；
