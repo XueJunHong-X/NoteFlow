@@ -40,16 +40,16 @@ NoteFlow 做的不是「转文字」，而是**转成一份结构完整、能直
 
 去 **[Releases](../../releases)** 下载 `NoteFlow-<版本>-win64.zip`。
 
-当前最新版本 **v0.1.0**：
+当前最新版本 **v0.1.1**：
 
 | 项 | 值 |
 |---|---|
-| 附件 | `NoteFlow-v0.1.0-win64.zip` |
-| 大小 | 84,806,446 字节（80.9 MiB） |
-| SHA-256 | `f6d507cf7cdfe44ca0caa3c814a4d1fb67e9dcfb550d9e20225874ba0ede49f5` |
-| 直链 | [NoteFlow-v0.1.0-win64.zip](https://github.com/XueJunHong-X/NoteFlow/releases/download/v0.1.0/NoteFlow-v0.1.0-win64.zip) |
+| 附件 | `NoteFlow-v0.1.1-win64.zip` |
+| 大小 | 84,838,063 字节（80.9 MiB） |
+| SHA-256 | `56d9d8cca5abfe7a8151a645566362f430eee284b86d8aa1507672dc07cccad7` |
+| 直链 | [NoteFlow-v0.1.1-win64.zip](https://github.com/XueJunHong-X/NoteFlow/releases/download/v0.1.1/NoteFlow-v0.1.1-win64.zip) |
 
-下载后可用 `Get-FileHash .\NoteFlow-v0.1.0-win64.zip -Algorithm SHA256` 核对完整性。
+下载后可用 `Get-FileHash .\NoteFlow-v0.1.1-win64.zip -Algorithm SHA256` 核对完整性。
 
 1. 解压 zip，得到一个 `NoteFlow` 文件夹（**不要只拷 exe**，`_internal` 是它的运行库）；
 2. 双击 `NoteFlow.exe`；
