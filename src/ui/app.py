@@ -17,6 +17,7 @@ from src.appconfig import AppConfig
 from src.controller import Controller, LogBridge
 
 from . import theme as T
+from .export_dialog import ExportDialog
 from .settings_dialog import SettingsDialog
 from .widgets import Banner, Card, DropZone, FailurePanel, LogPanel, ModeSwitch, ProgressBar, RoundButton, elide
 
@@ -51,6 +52,7 @@ class NoteFlowApp:
         self._pending_real = False
         self._estimate_token = 0
         self._dialog: SettingsDialog | None = None
+        self._export_dialog: ExportDialog | None = None
         self._scale = 1.0
         # 并发反馈：档位、限流提示的淡出进度，以及 ETA 的速率估计
         self._concurrency_prev: int | None = None
@@ -120,6 +122,8 @@ class NoteFlowApp:
 
         settings = RoundButton(inner, "设置", command=self._open_settings, kind="secondary", height=34, font_size=9)
         settings.pack(side="right")
+        export = RoundButton(inner, "导出", command=self._open_export, kind="secondary", height=34, font_size=9)
+        export.pack(side="right", padx=(0, T.px(8)))
         self.mode_switch = ModeSwitch(inner, on_change=self._on_mode_change, mode="offline")
         self.mode_switch.pack(side="right", padx=(0, T.px(10)))
 
@@ -350,6 +354,30 @@ class NoteFlowApp:
         except Exception as exc:  # 打包后没有控制台，异常不能静默成「点了没反应」
             logger.exception("打开设置窗口失败")
             self.banner.show(f"设置窗口打开失败：{exc}", "error")
+
+    def _open_export(self) -> None:
+        try:
+            dialog = self._export_dialog
+            if dialog is not None and dialog.winfo_exists():
+                self._bring_to_front(dialog)
+                return
+            dialog = ExportDialog(
+                self.root,
+                Path(self.config.vault_dir).expanduser(),
+                latest_note=Path(self._last_note) if self._last_note else None,
+                on_event=self._on_export_event,
+            )
+            self._export_dialog = dialog
+            self._bring_to_front(dialog)
+        except Exception as exc:  # 打包后没有控制台，异常不能静默成「点了没反应」
+            logger.exception("打开导出窗口失败")
+            self.banner.show(f"导出窗口打开失败：{exc}", "error")
+
+    def _on_export_event(self, level: str, text: str) -> None:
+        tag = {"error": "ERROR", "warn": "WARNING", "success": "SUCCESS"}.get(level, "INFO")
+        self.log_panel.append(tag, text)
+        if level == "error":
+            self.banner.show(text, "error")
 
     def _bring_to_front(self, dialog: tk.Toplevel) -> None:
         """确保弹窗一定出现在主窗口之上（Windows 前台锁可能把它压在后面）。"""
