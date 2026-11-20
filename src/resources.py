@@ -21,3 +21,8 @@ def sample_dir() -> Path:
     if FROZEN:
         return resource_dir() / "sample_images"
     return BASE_DIR / "tests" / "sample_images"
+
+
+def icon_path() -> Path:
+    """应用图标（.ico）：打包后在解包目录 assets/icon，开发时在仓库 assets/icon。"""
+    return resource_dir() / "assets" / "icon" / "NoteFlow.ico"

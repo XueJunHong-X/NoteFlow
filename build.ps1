@@ -50,16 +50,32 @@ Write-Host "      内置样例图: $((Get-ChildItem $Staging -File).Count) 张�
 
 $SampleData = $Staging + ";sample_images"
 
+# 应用图标：--icon 写进 exe 资源（资源管理器/任务栏），--add-data 供窗口标题栏运行时加载
+$IconFile = Join-Path $RepoRoot "assets\icon\NoteFlow.ico"
+if (-not (Test-Path $IconFile)) {
+    throw "找不到图标文件：$IconFile"
+}
+# 只把 .ico 打进包内（图标源图和生成脚本是开发用的，不进安装包）
+$IconStage = Join-Path $WorkPath "assets\icon"
+if (Test-Path $IconStage) { Remove-Item $IconStage -Recurse -Force }
+New-Item -ItemType Directory -Path $IconStage -Force | Out-Null
+Copy-Item $IconFile -Destination $IconStage -Force
+$IconData = $IconStage + ";assets\icon"
+Write-Host "      应用图标: $IconFile" -ForegroundColor DarkGray
+
 $ArgsList = @(
     "--noconfirm",
     "--clean",
     "--onedir",
     "--name", "NoteFlow",
+    "--icon", $IconFile,
     "--distpath", $DistPath,
     "--workpath", $WorkPath,
     "--specpath", $WorkPath,
     # 把合成样例图打进去：没有仓库也能点「用内置样例演示」
     "--add-data", $SampleData,
+    # 图标打进包内，运行时设置窗口图标用
+    "--add-data", $IconData,
     # 这几个模块是运行时才 import 的，PyInstaller 静态分析看不到
     "--hidden-import", "cv2",
     "--hidden-import", "numpy",
@@ -82,6 +98,7 @@ $ArgsList = @(
     "--hidden-import", "src.appconfig",
     "--hidden-import", "src.offline_samples",
     "--hidden-import", "src.resources",
+    "--hidden-import", "src.openers",
     "--hidden-import", "src.controller",
     "--hidden-import", "src.ui.theme",
     "--hidden-import", "src.ui.widgets",

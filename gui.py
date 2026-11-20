@@ -15,7 +15,7 @@ import sys
 import time
 from pathlib import Path
 
-from src.resources import FROZEN, sample_dir
+from src.resources import FROZEN, icon_path, sample_dir
 
 
 def run_gui() -> int:
@@ -28,6 +28,12 @@ def run_gui() -> int:
     theme.enable_dpi_awareness()
     config = AppConfig.load()
     root = tk.Tk()
+    icon = icon_path()
+    if icon.exists():
+        try:
+            root.iconbitmap(default=str(icon))
+        except tk.TclError:  # 个别主题/平台不认 ico，窗口仍可正常显示
+            pass
     theme.set_scale(root)
     theme.apply_ttk(root)
     NoteFlowApp(root, config)

@@ -15,6 +15,7 @@ from tkinter import filedialog, messagebox
 from config import DOCUMENT_EXTENSIONS, IMAGE_EXTENSIONS
 from src.appconfig import AppConfig
 from src.controller import Controller, LogBridge
+from src.openers import open_ima, open_in_obsidian
 
 from . import theme as T
 from .export_dialog import ExportDialog
@@ -177,6 +178,15 @@ class NoteFlowApp:
             side="left", padx=(T.px(8), 0)
         )
         RoundButton(actions, "离线演示", command=self._run_sample, kind="ghost", height=40).pack(side="right")
+
+        openers = tk.Frame(left, bg=T.BG)
+        openers.pack(fill="x", pady=(T.px(8), 0))
+        RoundButton(
+            openers, "在 Obsidian 中打开", command=self._open_in_obsidian, kind="ghost", height=34, font_size=9
+        ).pack(side="left")
+        RoundButton(
+            openers, "打开 ima", command=self._open_ima, kind="ghost", height=34, font_size=9
+        ).pack(side="left", padx=(T.px(8), 0))
 
         task_card = Card(left)
         task_card.pack(fill="x", pady=(T.px(12), 0))
@@ -623,6 +633,25 @@ class NoteFlowApp:
             self.banner.show(f"打开笔记库失败：{exc}", "error")
             return
         self._open_path(path)
+
+    def _open_in_obsidian(self) -> None:
+        path = Path(self.config.vault_dir).expanduser()
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            self.banner.show(f"打开笔记库失败：{exc}", "error")
+            return
+        ok, message = open_in_obsidian(path)
+        if ok:
+            self.banner.show(message, "success", auto_hide_ms=6000)
+            return
+        # 没装 Obsidian / 协议未注册 / 唤起失败：明确提示，并回退到打开文件夹
+        self.banner.show(message, "warn")
+        self._open_path(path)
+
+    def _open_ima(self) -> None:
+        ok, message = open_ima()
+        self.banner.show(message, "success" if ok else "warn", auto_hide_ms=12000 if ok else 0)
 
     def _open_recent(self) -> None:
         if not self._last_note:
