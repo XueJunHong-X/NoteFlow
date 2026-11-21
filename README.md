@@ -45,8 +45,8 @@ NoteFlow 做的不是「转文字」，而是**转成一份结构完整、能直
 | 项 | 值 |
 |---|---|
 | 附件 | `NoteFlow-v0.1.2-win64.zip` |
-| 大小 | 85,033,638 字节（81.1 MiB） |
-| SHA-256 | `72fd4cc6d7416d4b0623a63697138397c0eab0cca8da3d67f8e072ef8904252e` |
+| 大小 | 85,019,642 字节（81.1 MiB） |
+| SHA-256 | `8776f967bb4b22d4549292a027b95ad32716151de764ba2ad901a186edc68bb9` |
 | 直链 | [NoteFlow-v0.1.2-win64.zip](https://github.com/XueJunHong-X/NoteFlow/releases/download/v0.1.2/NoteFlow-v0.1.2-win64.zip) |
 
 下载后可用 `Get-FileHash .\NoteFlow-v0.1.2-win64.zip -Algorithm SHA256` 核对完整性。
@@ -179,7 +179,7 @@ python demo.py --max-pages 3                     # 每个文档只跑前 3 页�
 | Tk / Python 运行时 / 其余依赖 | 其余 |
 | **实测整目录** | **209.6 MB** |
 
-体积大是「把图像、PDF、GUI 运行时全塞进一个目录」的必然代价；压缩包 81.1 MiB（85,033,638 字节）。
+体积大是「把图像、PDF、GUI 运行时全塞进一个目录」的必然代价；压缩包 81.1 MiB（85,019,642 字节）。
 
 ---
 
