@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoteFlow · API Key 配置说明书</title>
+<style>
+  :root{
+    --bg:#F5F7FB;
+    --card:#FFFFFF;
+    --border:#E6E9F2;
+    --border-strong:#D5DBEA;
+    --ink:#101828;
+    --ink-soft:#344054;
+    --muted:#667085;
+    --muted-light:#98A2B3;
+    --accent:#2F6BFF;
+    --accent-hover:#1F55E0;
+    --accent-soft:#EAF0FF;
+    --success:#12B76A;
+    --success-soft:#E7F8F0;
+    --warn:#D97706;
+    --warn-soft:#FFF4E5;
+    --danger:#D92D20;
+    --danger-soft:#FEF3F2;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(16,24,40,.05);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Microsoft YaHei UI","Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;
+    font-size:15px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent);text-decoration:none;word-break:break-all}
+  a:hover{color:var(--accent-hover);text-decoration:underline}
+  code,kbd{
+    font-family:Consolas,"Cascadia Mono",monospace;
+    font-size:.9em;
+    background:#F3F5FA;
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:1px 6px;
+    color:var(--ink-soft);
+  }
+  .page{max-width:960px;margin:0 auto;padding:32px 24px 64px}
+
+  /* 顶部 */
+  .hero{
+    background:linear-gradient(135deg,#FFFFFF 0%,#F7F9FF 58%,#EFF4FF 100%);
+    border:1px solid var(--border);
+    border-radius:20px;
+    box-shadow:var(--shadow);
+    padding:30px 32px 26px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;right:-80px;top:-90px;width:280px;height:280px;
+    background:radial-gradient(circle,rgba(47,107,255,.12),rgba(47,107,255,0) 68%);
+    pointer-events:none;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:42px;height:42px;border-radius:11px;background:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:20px;font-weight:700;letter-spacing:.5px;
+    box-shadow:0 6px 16px rgba(47,107,255,.28);
+    flex:0 0 auto;
+  }
+  .brand-name{font-size:19px;font-weight:700;letter-spacing:.2px;line-height:1.2}
+  .brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
+  h1{font-size:28px;line-height:1.35;margin:22px 0 8px;letter-spacing:.2px}
+  .lead{margin:0;color:var(--muted);font-size:14.5px;max-width:720px}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--card);border:1px solid var(--border);
+    color:var(--ink-soft);font-size:12.5px;border-radius:999px;padding:5px 12px;
+  }
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--success)}
+  .pill.blue .dot{background:var(--accent)}
+
+  /* 目录 */
+  .toc{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:10px;margin:22px 0 0;
+  }
+  .toc a{
+    display:flex;align-items:center;gap:10px;
+    background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:10px 14px;color:var(--ink-soft);font-size:13.5px;
+    transition:border-color .15s,box-shadow .15s,transform .15s;
+  }
+  .toc a:hover{border-color:#C9D9FF;box-shadow:0 6px 18px rgba(47,107,255,.08);text-decoration:none;transform:translateY(-1px)}
+  .toc .num{
+    width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:0 0 auto;
+  }
+
+  /* 章节 */
+  section{margin-top:26px}
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:26px 28px;
+  }
+  .card + .card{margin-top:14px}
+  .sec-head{display:flex;align-items:center;gap:12px;margin:0 0 6px}
+  .sec-index{
+    width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:0 0 auto;
+  }
+  h2{font-size:20px;margin:0;letter-spacing:.2px}
+  h3{font-size:16px;margin:22px 0 8px}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0;padding-left:22px}
+  li{margin:6px 0}
+  .muted{color:var(--muted)}
+  .small{font-size:13px}
+  .strong{font-weight:700}
+  .accent{color:var(--accent)}
+
+  .note,.warn,.ok{
+    border-radius:12px;padding:14px 16px;margin:14px 0;font-size:14px;
+    border:1px solid transparent;
+  }
+  .note{background:var(--accent-soft);border-color:#D6E2FF;color:#1D3F9E}
+  .warn{background:var(--warn-soft);border-color:#FDE2BF;color:#8A4A05}
+  .ok{background:var(--success-soft);border-color:#C7F0DD;color:#08663F}
+  .note b,.warn b,.ok b{font-weight:700}
+
+  /* 服务商入口卡片 */
+  .provider-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:14px;margin:16px 0;
+  }
+  .provider-card{
+    display:flex;flex-direction:column;
+    background:#FCFDFF;border:1px solid var(--border);border-radius:14px;
+    padding:18px 18px 16px;
+  }
+  .provider-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .provider-name{font-size:16px;font-weight:700;color:var(--ink)}
+  .provider-tag{
+    font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-soft);
+    border-radius:999px;padding:2px 9px;
+  }
+  .provider-desc{font-size:13px;color:var(--muted);margin:0 0 12px}
+  .cta-row{display:flex;flex-direction:column;gap:8px;margin:0 0 14px}
+  .cta{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border-radius:10px;padding:9px 14px;background:var(--accent);color:#fff !important;
+    font-size:13.5px;font-weight:700;text-decoration:none !important;
+    box-shadow:0 4px 12px rgba(47,107,255,.18);
+    transition:background .15s,transform .15s;
+  }
+  .cta:hover{background:var(--accent-hover);color:#fff !important;transform:translateY(-1px)}
+  .cta.secondary{
+    background:#fff;color:var(--accent) !important;border:1px solid #C9D9FF;
+    box-shadow:none;
+  }
+  .cta.secondary:hover{background:var(--accent-soft)}
+  .provider-map{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-top:auto}
+  .provider-map .map-row{
+    display:grid;grid-template-columns:78px 1fr;gap:8px;align-items:start;
+    padding:9px 12px;border-bottom:1px solid var(--border);font-size:12.5px;
+  }
+  .provider-map .map-row:last-child{border-bottom:none}
+  .provider-map .k{color:var(--muted);white-space:nowrap}
+  .provider-map code{white-space:normal;word-break:break-all}
+  .provider-step{font-size:12.5px;color:var(--muted);margin:12px 0 0;line-height:1.65}
+  .provider-step b{color:var(--ink-soft)}
+
+  /* 表格 */
+  .table-wrap{overflow-x:auto;margin:14px 0;border:1px solid var(--border);border-radius:12px}
+  table{border-collapse:collapse;width:100%;min-width:680px;font-size:13.5px;background:var(--card)}
+  th,td{padding:12px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border)}
+  th{background:#FAFBFE;color:var(--ink-soft);font-weight:700;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  td code{white-space:nowrap}
+
+  /* 字段示意 */
+  .field-map{border:1px solid var(--border);border-radius:12px;overflow:hidden;margin:16px 0}
+  .field-map-head{
+    background:#FAFBFE;border-bottom:1px solid var(--border);
+    padding:10px 16px;font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;
+  }
+  .window-dots{display:flex;gap:5px}
+  .window-dots i{width:8px;height:8px;border-radius:50%;background:#E1E6F0;display:block}
+  .field-row{
+    display:grid;grid-template-columns:132px 1fr;gap:12px;align-items:center;
+    padding:12px 16px;border-bottom:1px solid var(--border);font-size:13.5px;
+  }
+  .field-row:last-child{border-bottom:none}
+  .field-label{color:var(--muted)}
+  .fake-input{
+    background:#FAFBFE;border:1px solid var(--border-strong);border-radius:8px;
+    padding:7px 11px;color:var(--ink-soft);font-size:13px;
+  }
+  .fake-input.focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(47,107,255,.10)}
+  .fake-btn{
+    display:inline-block;background:var(--accent-soft);color:var(--accent);
+    border-radius:8px;padding:5px 11px;font-size:12px;font-weight:700;
+  }
+
+  /* 步骤 */
+  .steps{counter-reset:step;margin:14px 0 0;padding:0;list-style:none}
+  .steps > li{
+    counter-increment:step;position:relative;padding:0 0 18px 46px;margin:0;
+  }
+  .steps > li::before{
+    content:counter(step);
+    position:absolute;left:0;top:2px;width:28px;height:28px;border-radius:50%;
+    background:var(--accent);color:#fff;font-size:13px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 10px rgba(47,107,255,.22);
+  }
+  .steps > li::after{
+    content:"";position:absolute;left:13.5px;top:32px;bottom:2px;width:1px;background:var(--border);
+  }
+  .steps > li:last-child::after{display:none}
+  .steps > li:last-child{padding-bottom:0}
+  .step-title{font-weight:700;color:var(--ink);margin-bottom:2px}
+
+  .kbd-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  .status-chip{
+    display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+    padding:3px 11px;font-size:12.5px;font-weight:700;
+  }
+  .status-chip.ok{background:var(--success-soft);color:var(--success);border:1px solid #C7F0DD}
+  .status-chip.warn{background:var(--warn-soft);color:var(--warn);border:1px solid #FDE2BF}
+  .status-chip.off{background:#F2F4F8;color:var(--muted);border:1px solid var(--border)}
+
+  .faq{border-top:1px solid var(--border);margin-top:16px;padding-top:4px}
+  .faq details{border-bottom:1px solid var(--border);padding:12px 0}
+  .faq details:last-child{border-bottom:none}
+  .faq summary{cursor:pointer;font-weight:700;color:var(--ink);font-size:14.5px;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"＋";color:var(--accent);font-weight:700;margin-right:8px}
+  .faq details[open] summary::before{content:"－"}
+  .faq details p{color:var(--muted);font-size:14px;margin:8px 0 2px}
+
+  footer{
+    margin-top:26px;padding-top:18px;border-top:1px solid var(--border);
+    color:var(--muted-light);font-size:12.5px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  }
+
+  @media (max-width:640px){
+    .page{padding:18px 14px 40px}
+    .hero{padding:22px 20px;border-radius:16px}
+    h1{font-size:23px}
+    .card{padding:20px 18px}
+    .field-row{grid-template-columns:1fr;gap:6px}
+    .provider-grid{grid-template-columns:1fr}
+    th,td{padding:10px}
+  }
+  @media print{
+    body{background:#fff}
+    .page{max-width:none;padding:0}
+    .hero,.card,.toc a{box-shadow:none}
+    section{break-inside:avoid}
+    a{color:inherit}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <div class="brand">
+      <div class="logo">N</div>
+      <div>
+        <div class="brand-name">NoteFlow</div>
+        <div class="brand-sub">手写笔记智能整理 · 本地离线说明书</div>
+      </div>
+    </div>
+
+    <h1>API Key 配置说明书</h1>
+    <p class="lead">
+      这份说明书只做一件事：帮你在 NoteFlow 里填好自己的 API Key，并确认它真的可用。
+      全文可以断网阅读，不依赖任何在线文档。
+    </p>
+
+    <div class="pills">
+      <span class="pill blue"><span class="dot"></span>纯 BYOK：Key 由你自己申请</span>
+      <span class="pill"><span class="dot"></span>Key 只存本机，DPAPI 加密</span>
+      <span class="pill"><span class="dot"></span>没有账号体系，没有中转服务器</span>
+    </div>
+
+    <nav class="toc" aria-label="目录">
+      <a href="#what"><span class="num">1</span>API Key 是什么</a>
+      <a href="#apply"><span class="num">2</span>去服务商控制台申请</a>
+      <a href="#fill"><span class="num">3</span>填到设置页</a>
+      <a href="#test"><span class="num">4</span>测试连接</a>
+      <a href="#save"><span class="num">5</span>保存与本机加密</a>
+      <a href="#offline"><span class="num">6</span>没有 Key 时能做什么</a>
+    </nav>
+  </header>
+
+  <!-- 1 -->
+  <section id="what">
+    <div class="card">
+      <div class="sec-head"><span class="sec-index">1</span><h2>API Key 是什么</h2></div>
+      <p>
+        API Key 是你在多模态模型服务商那里生成的一串密钥。NoteFlow 用它调用<strong>你自己</strong>的模型接口，
+        把每一页笔记的图片交给模型识别成结构化文字。
+      </p>
+      <div class="note">
+        <b>本产品是纯 BYOK（Bring Your Own Key）。</b>
+        NoteFlow 不提供账号、不代收费用、不经过任何中间服务器；你的请求从本机直接发往你填写的接口地址。
+      </div>
+      <p class="small muted">
+        模型必须支持图片输入。只支持纯文本的对话模型不能用来识别手写笔记。
+      </p>
+      <p class="small muted">
+        服务商通常只在创建时完整显示一次 Key，请当场复制并妥善保存；如果泄露，请到控制台删除并重新生成。
+      </p>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="apply">
+    <div class="card">
+      <div class="sec-head"><span class="sec-index">2</span><h2>去服务商控制台申请 Key</h2></div>
+      <p>下面两家服务商都提供 OpenAI 兼容接口，任选一家即可。点击按钮会用系统浏览器打开官方控制台，申请到 Key 后把右侧对应的接口地址与模型名一起填进 NoteFlow 的设置页。</p>
+
+      <div class="provider-grid">
+        <div class="provider-card">
+          <div class="provider-top">
+            <span class="provider-name">阿里云百炼</span>
+            <span class="provider-tag">DashScope</span>
+          </div>
+          <p class="provider-desc">通义千问系列多模态模型，适合中文手写笔记识别。</p>
+          <div class="cta-row">
+            <a class="cta" href="https://bailian.console.aliyun.com/" target="_blank" rel="noopener noreferrer">打开阿里云百炼控制台 ↗</a>
+            <a class="cta secondary" href="https://bailian.console.aliyun.com/cn-beijing/model/settings/api-key" target="_blank" rel="noopener noreferrer">直达 API Key 页面 ↗</a>
+          </div>
+          <div class="provider-map">
+            <div class="map-row"><span class="k">接口地址</span><code>https://dashscope.aliyuncs.com/compatible-mode/v1</code></div>
+            <div class="map-row"><span class="k">模型名</span><code>qwen-vl-max</code></div>
+          </div>
+          <p class="provider-step"><b>创建路径：</b>登录控制台 → 选择地域（如华北2 北京）→ 左侧「API-KEY」→ 创建 API Key → 立即复制。</p>
+        </div>
+
+        <div class="provider-card">
+          <div class="provider-top">
+            <span class="provider-name">智谱开放平台</span>
+            <span class="provider-tag">BigModel</span>
+          </div>
+          <p class="provider-desc">GLM 系列多模态模型，支持图片理解。</p>
+          <div class="cta-row">
+            <a class="cta" href="https://bigmodel.cn/" target="_blank" rel="noopener noreferrer">打开智谱开放平台控制台 ↗</a>
+            <a class="cta secondary" href="https://bigmodel.cn/usercenter/proj-mgmt/apikeys" target="_blank" rel="noopener noreferrer">直达 API Keys 页面 ↗</a>
+          </div>
+          <div class="provider-map">
+            <div class="map-row"><span class="k">接口地址</span><code>https://open.bigmodel.cn/api/paas/v4</code></div>
+            <div class="map-row"><span class="k">模型名</span><code>glm-4v-plus</code></div>
+          </div>
+          <p class="provider-step"><b>创建路径：</b>登录控制台 → 右上角头像或「个人中心」→「API Keys」→ 新建 API Key → 立即复制。</p>
+        </div>
+      </div>
+
+      <div class="note">
+        <b>控制台和接口地址要成对使用。</b>
+        阿里云百炼每个地域有独立的 API Key 与接入地址，不能跨地域混用；上面的直达按钮默认打开华北2（北京）。
+        智谱的 Key 与接口地址也按上表对应，不要混填另一家的地址。
+      </div>
+
+      <h3>以阿里云百炼为例</h3>
+      <ol class="steps">
+        <li>
+          <div class="step-title">打开控制台并登录</div>
+          访问 <a href="https://bailian.console.aliyun.com/" target="_blank" rel="noopener noreferrer">bailian.console.aliyun.com</a>，用你的阿里云账号登录。
+        </li>
+        <li>
+          <div class="step-title">进入 API Key 页面</div>
+          在控制台左侧进入「API-KEY」，或直接打开 <a href="https://bailian.console.aliyun.com/cn-beijing/model/settings/api-key" target="_blank" rel="noopener noreferrer">华北2（北京）API Key 页面</a>。
+        </li>
+        <li>
+          <div class="step-title">创建并复制 Key</div>
+          点「创建 API Key」，按控制台提示确认归属账号、业务空间与权限，复制生成的字符串。它通常是一长串字母和数字，请完整复制，不要带多余空格。
+        </li>
+        <li>
+          <div class="step-title">确认模型已开通</div>
+          在模型广场确认你打算使用的多模态模型（例如 <code>qwen-vl-max</code> 或 <code>qwen3-vl-plus</code>）可用；首次使用可能需要按控制台提示开通模型服务。
+        </li>
+      </ol>
+
+      <p class="small muted">
+        智谱的流程类似：登录 <a href="https://bigmodel.cn/" target="_blank" rel="noopener noreferrer">智谱开放平台</a> →
+        进入 <a href="https://bigmodel.cn/usercenter/proj-mgmt/apikeys" target="_blank" rel="noopener noreferrer">API Keys</a> → 新建并复制 Key。
+      </p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section id="fill">
+    <div class="card">
+      <div class="sec-head"><span class="sec-index">3</span><h2>填到设置页</h2></div>
+      <p>回到 NoteFlow，点主窗口右上角的「设置」，在「模型接口」卡片里填写三项：</p>
+
+      <div class="field-map" aria-label="设置页字段示意">
+        <div class="field-map-head">
+          <span>设置 · NoteFlow</span>
+          <span class="window-dots"><i></i><i></i><i></i></span>
+        </div>
+        <div class="field-row">
+          <span class="field-label">API Key</span>
+          <span class="fake-input focus">粘贴你刚复制的 Key</span>
+        </div>
+        <div class="field-row">
+          <span class="field-label">接口地址</span>
+          <span class="fake-input">https://dashscope.aliyuncs.com/compatible-mode/v1</span>
+        </div>
+        <div class="field-row">
+          <span class="field-label">模型名</span>
+          <span class="fake-input">qwen-vl-max</span>
+        </div>
+        <div class="field-row">
+          <span class="field-label">操作</span>
+          <span><span class="fake-btn">测试连接</span> &nbsp;<span class="small muted">先测试，再保存</span></span>
+        </div>
+      </div>
+
+      <ul>
+        <li><strong>API Key</strong>：粘贴服务商给你的完整 Key。输入框默认打码，可勾选右侧「显示 Key」核对。</li>
+        <li><strong>接口地址</strong>：填上表里对应的地址；末尾不要多加 <code>/chat/completions</code>，NoteFlow 会自己拼接。</li>
+        <li><strong>模型名</strong>：填上表里对应的模型名，必须支持图片输入。</li>
+      </ul>
+
+      <div class="warn">
+        <b>换服务商时三项要一起换。</b>
+        只换 Key、不换接口地址和模型名，测试连接会失败。
+      </div>
+
+      <p class="small muted">
+        找不到控制台地址时，随时回到设置页点「说明书」；这份文件就在程序的 <code>docs</code> 目录里，断网也能打开。
+      </p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section id="test">
+    <div class="card">
+      <div class="sec-head"><span class="sec-index">4</span><h2>用「测试连接」确认可用</h2></div>
+      <p>
+        填好三项后，先不要急着保存。点「测试连接」——NoteFlow 会用当前填写的信息向接口发一次轻量请求，
+        只验证 Key、地址、模型名是否匹配，不会产生识别任务。
+      </p>
+
+      <div class="kbd-row">
+        <span class="status-chip ok">通过：连接正常（…）</span>
+        <span class="status-chip warn">失败：HTTP 401 · …</span>
+      </div>
+
+      <ul>
+        <li><strong>显示「通过」</strong>：说明 Key 可用。再点「保存」，把配置和验证状态一起写入本机。</li>
+        <li><strong>显示「失败」</strong>：按下面的对照表排查，修改后重新点「测试连接」。</li>
+      </ul>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>提示</th><th>常见原因</th><th>怎么改</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>HTTP 401</code> / <code>403</code></td>
+              <td>Key 不正确、已失效，或复制时缺了字符</td>
+              <td>回控制台重新复制或重新生成 Key，整段粘贴</td>
+            </tr>
+            <tr>
+              <td><code>HTTP 404</code></td>
+              <td>接口地址多了或少了路径，或模型名不存在</td>
+              <td>对照第 2 节表格，逐字核对接口地址与模型名</td>
+            </tr>
+            <tr>
+              <td><code>HTTP 400</code></td>
+              <td>模型不支持图片输入，或参数与该接口不兼容</td>
+              <td>换用支持视觉的多模态模型</td>
+            </tr>
+            <tr>
+              <td>连接超时 / 地址不可达</td>
+              <td>断网、代理或防火墙拦截</td>
+              <td>确认网络能访问该服务商域名后重试</td>
+            </tr>
+            <tr>
+              <td><code>HTTP 429</code></td>
+              <td>请求过于频繁，被服务商限流</td>
+              <td>稍等片刻再测；识别时把「识别并发」调成 1</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <b>Key 改动后，旧的「测试通过」会自动清空。</b>
+        这是为了避免误以为新 Key 已经验证过——每次修改 Key，都需要重新点一次「测试连接」。
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section id="save">
+    <div class="card">
+      <div class="sec-head"><span class="sec-index">5</span><h2>保存后，Key 以什么形式存在本机</h2></div>
+      <p>点「保存」后，NoteFlow 会把配置写入当前 Windows 用户的应用数据目录：</p>
+      <p><code>%APPDATA%\NoteFlow\config.json</code></p>
+
+      <ul>
+        <li><strong>DPAPI 加密</strong>：API Key 使用 Windows DPAPI（CurrentUser 作用域）加密，文件里只保存 <code>api_key_enc</code>（加密后的密文）和 <code>api_key_last4</code>（末四位），没有明文 <code>api_key</code> 字段。</li>
+        <li><strong>只有本机当前用户能解开</strong>：把 <code>config.json</code> 拷到别的电脑或别的 Windows 账户，密文无法解密；换机后重新填一次 Key 即可。</li>
+        <li><strong>界面默认打码</strong>：设置页只显示末四位；需要核对时可临时勾选「显示 Key」。</li>
+        <li><strong>不会上传到别处</strong>：Key 只用于向你在「接口地址」里填写的服务商发起请求，NoteFlow 没有中转服务器，也不会把 Key 写进日志或安装包。</li>
+      </ul>
+
+      <div class="ok">
+        <b>保存成功后你会看到「已加密保存到本机」的确认。</b>
+        设置页会一直显示当前 Key 的状态：<span class="status-chip ok">已验证</span> 或 <span class="status-chip warn">未验证</span>。
+        重启 NoteFlow 后再次打开设置，状态仍然保留。
+      </div>
+
+      <p class="small muted">
+        如果没有点过「测试连接」就直接保存，Key 仍会加密落盘，但状态会显示「未验证」；
+        建议补测一次，确认服务商返回「通过」。
+      </p>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section id="offline">
+    <div class="card">
+      <div class="sec-head"><span class="sec-index">6</span><h2>没有 Key 时，哪些功能仍然可用</h2></div>
+      <p>
+        没有配置 Key 也能完整使用界面，只是不会调用真实模型。当前会明确显示为「离线示例」。
+      </p>
+      <ul>
+        <li><strong>离线演示</strong>：点主窗口的「离线演示」，用内置的合成样例图跑完整条链路——拆页、预处理、生成 Markdown、归档、索引与思维导图，全程不联网、不调用模型。</li>
+        <li><strong>查看产物</strong>：演示结束后可以打开笔记库，查看课程索引、笔记正文与 Mermaid 思维导图，确认输出结构符合预期。</li>
+        <li><strong>调整设置</strong>：路径、并发、清理等本机选项都可以先配置好，等拿到 Key 再切换真实识别。</li>
+      </ul>
+      <div class="warn">
+        <b>离线示例不是真实识别。</b>
+        它只用于演示链路和产物结构；处理你自己的手写笔记前，需要按第 2–4 节配置并验证 Key。
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="card">
+      <div class="sec-head"><span class="sec-index">?</span><h2>常见问题</h2></div>
+      <div class="faq">
+        <details>
+          <summary>我已经保存了 Key，为什么状态还是「未验证」？</summary>
+          <p>保存只负责落盘，不会自动联网验证。请在设置页点一次「测试连接」，看到「通过」后再保存，状态才会变成「已验证」。</p>
+        </details>
+        <details>
+          <summary>重启程序后，怎么确认 Key 还在、而且已验证？</summary>
+          <p>打开「设置」，「模型接口」卡片里会显示当前 Key 的末四位和「已验证 / 未验证」。已验证状态会随配置保存在本机。</p>
+        </details>
+        <details>
+          <summary>Key 会被 NoteFlow 收集或转发吗？</summary>
+          <p>不会。Key 只保存在本机并直接用于你填写的接口地址；NoteFlow 没有账号体系、没有中转服务器，也没有任何代收或代理环节。</p>
+        </details>
+        <details>
+          <summary>换一台电脑后为什么提示 Key 不可用？</summary>
+          <p>API Key 使用 Windows DPAPI 按「当前用户」加密，密文只能在原账户下解密。换机或换账户后，在设置页重新填写并测试即可。</p>
+        </details>
+        <details>
+          <summary>我只有纯文本模型的 Key，可以识别手写笔记吗？</summary>
+          <p>不可以。识别需要把页面图片交给模型，必须使用支持图片输入的多模态模型，并按服务商表格填写对应的接口地址与模型名。</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>NoteFlow · 本地离线说明书</span>
+    <span>纯 BYOK：配置只存本机，密钥不明文落盘</span>
+  </footer>
+</div>
+</body>
+</html>

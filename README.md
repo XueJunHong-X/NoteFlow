@@ -40,16 +40,16 @@ NoteFlow 做的不是「转文字」，而是**转成一份结构完整、能直
 
 去 **[Releases](../../releases)** 下载 `NoteFlow-<版本>-win64.zip`。
 
-当前最新版本 **v0.1.1**：
+当前最新版本 **v0.1.2**：
 
 | 项 | 值 |
 |---|---|
-| 附件 | `NoteFlow-v0.1.1-win64.zip` |
-| 大小 | 84,838,063 字节（80.9 MiB） |
-| SHA-256 | `56d9d8cca5abfe7a8151a645566362f430eee284b86d8aa1507672dc07cccad7` |
-| 直链 | [NoteFlow-v0.1.1-win64.zip](https://github.com/XueJunHong-X/NoteFlow/releases/download/v0.1.1/NoteFlow-v0.1.1-win64.zip) |
+| 附件 | `NoteFlow-v0.1.2-win64.zip` |
+| 大小 | 85,033,638 字节（81.1 MiB） |
+| SHA-256 | `72fd4cc6d7416d4b0623a63697138397c0eab0cca8da3d67f8e072ef8904252e` |
+| 直链 | [NoteFlow-v0.1.2-win64.zip](https://github.com/XueJunHong-X/NoteFlow/releases/download/v0.1.2/NoteFlow-v0.1.2-win64.zip) |
 
-下载后可用 `Get-FileHash .\NoteFlow-v0.1.1-win64.zip -Algorithm SHA256` 核对完整性。
+下载后可用 `Get-FileHash .\NoteFlow-v0.1.2-win64.zip -Algorithm SHA256` 核对完整性。
 
 1. 解压 zip，得到一个 `NoteFlow` 文件夹（**不要只拷 exe**，`_internal` 是它的运行库）；
 2. 双击 `NoteFlow.exe`；
@@ -69,7 +69,7 @@ NoteFlow 做的不是「转文字」，而是**转成一份结构完整、能直
 3. 保存后把模式开关拨到「**真实识别**」，再拖入文件或点「开始处理」。
 
 真实识别需要联网，并且会消耗模型额度：**每页一次调用，实测 6–35 秒/页**。
-配置只保存在本机 `%APPDATA%\NoteFlow\config.json`，不进仓库、不打进 exe；
+配置只保存在本机 `%APPDATA%\NoteFlow\config.json`，Windows 下 Key 经 DPAPI 按当前用户加密，不进仓库、不打进 exe；
 界面上 Key 默认打码显示，投屏演示时不会泄露。
 
 > 想用命令行而非桌面界面，也可以把 Key 写进仓库根目录的 `.env`（参考 `.env.example`）。
@@ -177,9 +177,9 @@ python demo.py --max-pages 3                     # 每个文档只跑前 3 页�
 | PyMuPDF（PDF 渲染） | 45 MB（裁掉 ONNX 后） |
 | numpy + OpenBLAS | 40 MB |
 | Tk / Python 运行时 / 其余依赖 | 其余 |
-| **实测整目录** | **约 200 MB** |
+| **实测整目录** | **209.6 MB** |
 
-体积大是「把图像、PDF、GUI 运行时全塞进一个目录」的必然代价；压缩包约 90–110 MB。
+体积大是「把图像、PDF、GUI 运行时全塞进一个目录」的必然代价；压缩包 81.1 MiB（85,033,638 字节）。
 
 ---
 
@@ -352,7 +352,8 @@ flowchart TD
   "vault_dir": "...\\vault",
   "api_base": "https://dashscope.aliyuncs.com/compatible-mode/v1",
   "model": "qwen3-vl-plus",
-  "api_key": "（这里只存在本机）",
+  "api_key_enc": "（DPAPI 加密后的密文，只在本机当前 Windows 用户下可解密）",
+  "api_key_last4": "1234",
   "offline_mode": false
 }
 ```
@@ -423,7 +424,7 @@ flowchart TD
 - **会上传的**：只在「真实识别模式」下，把**当前页的图片**（或 PDF 该页的文字）发送到**你自己配置的**云端多模态模型接口；
 - **不会上传的**：API Key 以外的其他笔记、目录结构、使用记录；密钥只用于请求头鉴权；
 - **落在哪**：笔记写到你在界面里选的 vault 目录，预处理图在 `output\preprocessed`、拆页图在 `output\pages`；
-- **密钥存哪**：只存 `%APPDATA%\NoteFlow\config.json`（或环境变量 / `.env`），不进仓库、不打进 exe；
+- **密钥存哪**：只存 `%APPDATA%\NoteFlow\config.json`，Windows 下用 DPAPI 按当前用户加密保存（换 Windows 账户或换机器无法解密）；也可用环境变量 / `.env`。不进仓库、不打进 exe；
 - **离线示例模式**：全程本机，不发起任何网络请求。
 
 ---

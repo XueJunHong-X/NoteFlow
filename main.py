@@ -46,7 +46,7 @@ from pathlib import Path
 from typing import Any
 
 from config import DOCUMENT_EXTENSIONS, Settings, setup_logging
-from src import failure_log, loader, onedrive, organizer, preprocessor, recognizer
+from src import failure_log, loader, manifest, onedrive, organizer, preprocessor, recognizer
 from src.watcher import FolderWatcher
 
 logger = logging.getLogger("noteflow")
@@ -150,6 +150,13 @@ def process_source(
     - should_cancel() 返回 True 时在页与页之间停止，已完成的页照常保留。
     """
     source = Path(source)
+    started_at = datetime.now().isoformat(timespec="seconds")
+    source_type = SOURCE_TYPES.get(source.suffix.lower(), "image")
+    try:
+        source_id = manifest.source_id_for(source)
+    except OSError:
+        source_id = ""
+
     try:
         pages = loader.PageStream(
             source,
@@ -161,6 +168,21 @@ def process_source(
     except Exception as exc:
         # 文件级失败（损坏、格式不支持、.goodnotes 只有矢量笔迹等）也留痕
         failure_log.record(settings, source, None, "load", exc)
+        if source_id:
+            manifest.write_manifest(
+                settings.output_dir,
+                source,
+                source_id=source_id,
+                source_type=source_type,
+                recognition_mode="dry_run" if dry_run else ("mock" if mock else "real"),
+                pages_total=0,
+                pages_ok=0,
+                pages_failed=1,
+                status="failed",
+                started_at=started_at,
+                vault_dir=str(settings.vault_dir),
+                notes=[],
+            )
         raise
     total = pages.total
 
@@ -169,10 +191,10 @@ def process_source(
         total = max_pages
 
     is_document = source.suffix.lower() in DOCUMENT_EXTENSIONS
-    source_type = SOURCE_TYPES.get(source.suffix.lower(), "image")
     preprocess_dir = settings.preprocessed_dir / source.stem
     outputs: list[Path] = []
     failed = 0
+    processed_pages = 0
 
     # 并发只作用于「预处理 + 识别」；拆页与归档仍在主线程串行，
     # 这样 PDF 生成器不会被多线程同时读取，vault 写入也天然有序。
@@ -200,6 +222,10 @@ def process_source(
                 "source_type": source_type,
                 "created": datetime.now().isoformat(timespec="seconds"),
             }
+            if source_id:
+                meta["source_id"] = source_id
+                meta["source_file"] = source.name
+                meta["source_size"] = source.stat().st_size
             if is_document:
                 meta["page"] = page.index
                 if source.suffix.lower() == ".goodnotes":
@@ -242,6 +268,7 @@ def process_source(
             if should_cancel is not None and should_cancel():
                 logger.info("收到停止请求，%s 剩余页面跳过", source.name)
                 break
+            processed_pages += 1
             logger.info("开始处理: %s 第 %s 页", source.name, page.index)
             if progress is not None:
                 progress(source, page.index, total, "start")
@@ -267,6 +294,31 @@ def process_source(
     finally:
         if pool is not None:
             pool.shutdown(wait=True)
+        if source_id:
+            notes = [str(path) for path in outputs if Path(path).suffix.lower() == ".md"]
+            pages_ok = max(0, processed_pages - failed)
+            if dry_run:
+                status = "dry_run"
+            elif failed or pages_ok < pages.total or processed_pages < pages.total:
+                status = "partial"
+            elif not notes:
+                status = "failed"
+            else:
+                status = "complete"
+            manifest.write_manifest(
+                settings.output_dir,
+                source,
+                source_id=source_id,
+                source_type=source_type,
+                recognition_mode="dry_run" if dry_run else ("mock" if mock else "real"),
+                pages_total=pages.total,
+                pages_ok=pages_ok,
+                pages_failed=failed,
+                status=status,
+                started_at=started_at,
+                vault_dir=str(settings.vault_dir),
+                notes=notes,
+            )
 
     if is_document:
         logger.info("%s 共 %d 页：成功 %d，失败 %d", source.name, pages.total, len(outputs), failed)

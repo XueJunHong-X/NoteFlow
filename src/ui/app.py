@@ -18,6 +18,7 @@ from src.controller import Controller, LogBridge
 from src.openers import open_ima, open_in_obsidian
 
 from . import theme as T
+from .cleanup_dialog import CleanupDialog
 from .export_dialog import ExportDialog
 from .settings_dialog import SettingsDialog
 from .widgets import Banner, Card, DropZone, FailurePanel, LogPanel, ModeSwitch, ProgressBar, RoundButton, elide
@@ -54,6 +55,7 @@ class NoteFlowApp:
         self._estimate_token = 0
         self._dialog: SettingsDialog | None = None
         self._export_dialog: ExportDialog | None = None
+        self._cleanup_dialog: CleanupDialog | None = None
         self._scale = 1.0
         # 并发反馈：档位、限流提示的淡出进度，以及 ETA 的速率估计
         self._concurrency_prev: int | None = None
@@ -174,7 +176,7 @@ class NoteFlowApp:
             actions, "开始监听", command=self._toggle_watch, kind="secondary", height=40, width=112
         )
         self.btn_watch.pack(side="left", padx=(T.px(8), 0))
-        RoundButton(actions, "打开笔记库", command=self._open_vault, kind="ghost", height=40).pack(
+        RoundButton(actions, "打开笔记库", command=self._open_vault, kind="soft", icon="folder", height=40).pack(
             side="left", padx=(T.px(8), 0)
         )
         RoundButton(actions, "离线演示", command=self._run_sample, kind="ghost", height=40).pack(side="right")
@@ -182,10 +184,19 @@ class NoteFlowApp:
         openers = tk.Frame(left, bg=T.BG)
         openers.pack(fill="x", pady=(T.px(8), 0))
         RoundButton(
-            openers, "在 Obsidian 中打开", command=self._open_in_obsidian, kind="ghost", height=34, font_size=9
+            openers,
+            "在 Obsidian 中打开",
+            command=self._open_in_obsidian,
+            kind="violet",
+            icon="obsidian",
+            height=34,
+            font_size=9,
         ).pack(side="left")
         RoundButton(
-            openers, "打开 ima", command=self._open_ima, kind="ghost", height=34, font_size=9
+            openers, "打开 ima", command=self._open_ima, kind="teal", icon="ima", height=34, font_size=9
+        ).pack(side="left", padx=(T.px(8), 0))
+        RoundButton(
+            openers, "清理本地缓存", command=self._open_cleanup, kind="amber", icon="broom", height=34, font_size=9
         ).pack(side="left", padx=(T.px(8), 0))
 
         task_card = Card(left)
@@ -350,6 +361,29 @@ class NoteFlowApp:
         self.banner.show("设置已保存。", "success", auto_hide_ms=4000)
         self._refresh_estimate_async()
 
+    def _cleanup_open(self) -> bool:
+        dialog = self._cleanup_dialog
+        return dialog is not None and dialog.winfo_exists()
+
+    def _open_cleanup(self) -> None:
+        if not self.config.cleanup_enabled:
+            self.banner.show("本地缓存清理默认关闭，请先在设置中开启。", "warn", auto_hide_ms=6000)
+            self._open_settings()
+            return
+        if self._state in ("running", "watching", "stopping"):
+            self.banner.show("请先停止当前任务，再清理本地缓存。", "warn")
+            return
+        try:
+            if self._cleanup_open():
+                self._bring_to_front(self._cleanup_dialog)
+                return
+            dialog = CleanupDialog(self.root, self.config)
+            self._cleanup_dialog = dialog
+            self._bring_to_front(dialog)
+        except Exception as exc:
+            logger.exception("打开清理窗口失败")
+            self.banner.show(f"清理窗口打开失败：{exc}", "error")
+
     def _open_settings(self) -> None:
         try:
             dialog = self._dialog
@@ -403,6 +437,26 @@ class NoteFlowApp:
 
     # ================= 任务控制 =================
 
+    def _require_real_key(self) -> bool:
+        """处理用户自有文件前的检查：没有可用 Key 就引导/阻断，不再用 mock 内容处理用户文件。
+
+        只有内置离线演示（“离线演示”按钮 → start_sample）不经过这里，始终可用。
+        """
+        if self.config.api_key.strip():
+            return True
+        self.banner.show(
+            "尚未配置 API Key：请在“设置”里填写阿里云百炼 / 智谱的 Key 再处理自己的文件，或点“离线演示”查看示例。",
+            "warn",
+        )
+        messagebox.showwarning(
+            "NoteFlow · 需要 API Key",
+            "处理你自己的文件需要真实识别，当前没有可用的 API Key。\n\n"
+            "· 去右上角“设置”填写 API Key（阿里云百炼 / 智谱）\n"
+            "· 或先点“离线演示”查看内置示例效果",
+            parent=self.root,
+        )
+        return False
+
     def _start_inbox(self) -> None:
         if self._state != "idle":
             self.banner.show("当前还有任务在运行，请先停止。", "warn")
@@ -429,6 +483,12 @@ class NoteFlowApp:
         if self._state != "idle":
             self.banner.show("当前还有任务在运行，请先停止。", "warn")
             return
+        if self._cleanup_open():
+            self.banner.show("请先关闭清理本地缓存窗口。", "warn")
+            return
+        # 无 Key 时不再用 mock 内容处理用户文件：先引导配置或离线演示
+        if not self._require_real_key():
+            return
         estimate = self.controller.estimate(paths)
         self._expected_pages = max(estimate.pages, 0)
         self._done_pages = 0
@@ -441,7 +501,7 @@ class NoteFlowApp:
         self.log_panel.append(
             "INFO",
             f"开始处理 {len(paths)} 个文件 · 预计 {estimate.pages} 页"
-            + ("（离线示例，不调用模型）" if estimate.calls == 0 else f" / {estimate.calls} 次调用"),
+            + ("（离线演示，不消耗 API）" if estimate.calls == 0 else f" / {estimate.calls} 次调用"),
         )
         if not self.controller.start_batch(paths):
             self.task_state.configure(text="空闲", fg=T.MUTED)
@@ -450,7 +510,7 @@ class NoteFlowApp:
         if estimate.files == 0:
             return "没有可处理的文件"
         if estimate.calls == 0:
-            return f"{label} {estimate.files} 个文件 · 预计 {estimate.pages} 页 · 离线示例不调用模型"
+            return f"{label} {estimate.files} 个文件 · 预计 {estimate.pages} 页 · 离线演示，不消耗 API"
         low = max(int(estimate.calls * 6 / 60), 1)
         high = max(int(estimate.calls * 35 / 60), low + 1)
         return f"{label} {estimate.files} 个文件 · 预计 {estimate.pages} 页 / {estimate.calls} 次调用 · 约 {low}–{high} 分钟"
@@ -461,6 +521,12 @@ class NoteFlowApp:
             return
         if self._state != "idle":
             self.banner.show("当前还有任务在运行，请先停止。", "warn")
+            return
+        if self._cleanup_open():
+            self.banner.show("请先关闭清理本地缓存窗口。", "warn")
+            return
+        # 无 Key 时监听到的用户文件也只会被 mock 处理，这里同样引导/阻断
+        if not self._require_real_key():
             return
         watch = Path(self.config.watch_dir).expanduser()
         try:
@@ -484,6 +550,9 @@ class NoteFlowApp:
         if self._state != "idle":
             self.banner.show("当前还有任务在运行，请先停止。", "warn")
             return
+        if self._cleanup_open():
+            self.banner.show("请先关闭清理本地缓存窗口。", "warn")
+            return
         self._expected_pages = 0
         self._done_pages = 0
         self._started_at = time.time()
@@ -492,6 +561,12 @@ class NoteFlowApp:
         self.controller.start_sample()
 
     def _retry_failed(self) -> None:
+        if self._cleanup_open():
+            self.banner.show("请先关闭清理本地缓存窗口。", "warn")
+            return
+        # 重试同样是在处理用户自有文件：无 Key 时先引导/阻断
+        if not self._require_real_key():
+            return
         sources: list[Path] = []
         for item in self._failure_items:
             path = Path(item.get("source", ""))
@@ -919,7 +994,7 @@ class NoteFlowApp:
             return
         if payload.get("offline"):
             self.estimate_label.configure(
-                text=f"收件箱 {files} 个文件 · 预计 {payload.get('pages', 0)} 页 · 离线示例不调用模型"
+                text=f"收件箱 {files} 个文件 · 预计 {payload.get('pages', 0)} 页 · 离线演示，不消耗 API"
             )
         else:
             calls = payload.get("calls", 0)

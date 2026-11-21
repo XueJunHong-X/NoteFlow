@@ -64,6 +64,13 @@ def _render_frontmatter(note: dict[str, Any], meta: dict[str, Any]) -> list[str]
         lines.append(f"source: {_yaml_str(str(meta['source']))}")
     if meta.get("source_type"):
         lines.append(f"source_type: {_yaml_str(str(meta['source_type']))}")
+    # 来源指纹：只写本地可重算的摘要，不写绝对路径，避免笔记外发时泄露本机目录
+    if meta.get("source_id"):
+        lines.append(f"source_id: {_yaml_str(str(meta['source_id']))}")
+    if meta.get("source_file"):
+        lines.append(f"source_file: {_yaml_str(str(meta['source_file']))}")
+    if meta.get("source_size"):
+        lines.append(f"source_size: {int(meta['source_size'])}")
     if meta.get("page"):
         lines.append(f"page: {meta['page']}")
     if meta.get("page_note"):

@@ -24,6 +24,7 @@ tests/sample_images/real/
 2026-11-15/
 2026-11-18/
 2026-11-20/
+2026-11-21/
 .screenshots/
 .trae-html-share-packages/
 NoteFlow_项目记忆.md
@@ -38,3 +39,6 @@ dist/
 .tmp_redline.py
 .tmp_credread.py
 .tmp_credread.ps1
+
+# 已封存的试用网关技术验证代码：不参与构建、不进入仓库
+gateway/

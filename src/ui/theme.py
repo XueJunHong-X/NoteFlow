@@ -22,6 +22,12 @@ MUTED_LIGHT = "#98A2B3"
 ACCENT = "#2F6BFF"
 ACCENT_HOVER = "#1F55E0"
 ACCENT_SOFT = "#EAF0FF"
+OBSIDIAN = "#7C3AED"
+OBSIDIAN_HOVER = "#6D28D9"
+IMA = "#0D9488"
+IMA_HOVER = "#0F766E"
+AMBER = "#D97706"
+AMBER_HOVER = "#B45309"
 SUCCESS = "#12B76A"
 SUCCESS_SOFT = "#E7F8F0"
 WARN = "#D97706"
@@ -153,6 +159,33 @@ def apply_ttk(root: tk.Misc) -> ttk.Style:
         lightcolor=[("focus", ACCENT)],
         darkcolor=[("focus", ACCENT)],
     )
+
+    # 下拉框与输入框观感一致：同样的浅底、边框与聚焦色
+    style.configure(
+        "TCombobox",
+        fieldbackground="#FAFBFE",
+        background=CARD,
+        foreground=INK,
+        arrowcolor=MUTED,
+        bordercolor=BORDER_STRONG,
+        lightcolor=BORDER_STRONG,
+        darkcolor=BORDER_STRONG,
+        padding=(6, 5),
+        font=f(9),
+    )
+    style.map(
+        "TCombobox",
+        fieldbackground=[("readonly", "#FAFBFE"), ("disabled", DISABLED_FILL)],
+        foreground=[("disabled", DISABLED_INK)],
+        bordercolor=[("focus", ACCENT)],
+        lightcolor=[("focus", ACCENT)],
+        darkcolor=[("focus", ACCENT)],
+    )
+    root.option_add("*TCombobox*Listbox.background", CARD)
+    root.option_add("*TCombobox*Listbox.foreground", INK)
+    root.option_add("*TCombobox*Listbox.selectBackground", ACCENT_SOFT)
+    root.option_add("*TCombobox*Listbox.selectForeground", INK)
+    root.option_add("*TCombobox*Listbox.font", "{" + FAMILY + "} 9")
 
     style.configure(
         "TButton",

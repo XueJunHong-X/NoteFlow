@@ -26,3 +26,8 @@ def sample_dir() -> Path:
 def icon_path() -> Path:
     """应用图标（.ico）：打包后在解包目录 assets/icon，开发时在仓库 assets/icon。"""
     return resource_dir() / "assets" / "icon" / "NoteFlow.ico"
+
+
+def manual_path() -> Path:
+    """本地离线说明书：打包后在解包目录 docs，开发时在仓库 docs。"""
+    return resource_dir() / "docs" / "byok-guide.html"

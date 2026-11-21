@@ -69,6 +69,15 @@ def friendly_error(exc: BaseException | None) -> str:
     text = str(exc).strip()
     lowered = text.lower()
 
+    # 认证 / 权限 / 额度类状态码要最先判断：
+    # 它们的报错文本里常带 "api key"、"permission" 等词，晚了会被通用分支误报成「未配置 Key」
+    if "http 401" in lowered or "401 client error" in lowered:
+        return "API Key 无效或无权限（401）：请检查 Key 是否抄错、是否属于当前地域的账号、账户是否欠费停用"
+    if "http 403" in lowered or "403 client error" in lowered:
+        return "没有该模型的调用权限（403）：请确认账号已开通此模型，或到服务商控制台检查权限"
+    if "http 402" in lowered or "402 client error" in lowered:
+        return "账户余额不足或已欠费（402）：请到服务商控制台充值后再试"
+
     if isinstance(exc, PermissionError) or "permission" in lowered or "access is denied" in lowered:
         return "没有写入权限，请换一个可写的目录"
     if isinstance(exc, FileNotFoundError):

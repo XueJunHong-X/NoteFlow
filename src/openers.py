@@ -106,3 +106,21 @@ def open_ima() -> tuple[bool, str]:
         "没有找到 ima 客户端，也没能打开 ima 网页版（https://ima.qq.com）。"
         "请检查网络，或先从 ima 官网安装桌面客户端后重试。"
     )
+
+
+def open_manual() -> tuple[bool, str]:
+    """用系统默认浏览器打开本地离线说明书；不访问网络，断网也能用。"""
+    from src.resources import manual_path
+
+    path = manual_path()
+    if not path.is_file():
+        return False, f"没有找到本地说明书：{path}。请从仓库 docs 目录补齐该文件。"
+    try:
+        if sys.platform == "win32":
+            os.startfile(str(path))
+        else:
+            if not webbrowser.open(path.as_uri()):
+                return False, f"未能唤起浏览器，请手动打开：{path}"
+    except OSError as exc:
+        return False, f"打开说明书失败：{exc}。文件位置：{path}"
+    return True, "已用默认浏览器打开本地说明书。"

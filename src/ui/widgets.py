@@ -75,7 +75,12 @@ class Card(tk.Frame):
 
 
 class RoundButton(tk.Canvas):
-    """圆角按钮：primary / secondary / soft / danger / ghost。"""
+    """圆角按钮：primary / secondary / soft / danger / ghost / violet / teal / amber。
+
+    彩色实底样式（violet / teal / amber）与 primary 一样是白字粗体；icon 传名称即可在
+    文字前画与文字同色的小图标，可选 obsidian / ima / file / package / mindmap / clipboard /
+    folder / broom / plug / log / save。
+    """
 
     KINDS = {
         "primary": {"fill": T.ACCENT, "hover": T.ACCENT_HOVER, "text": "#FFFFFF", "outline": "", "bold": True},
@@ -83,7 +88,51 @@ class RoundButton(tk.Canvas):
         "soft": {"fill": T.ACCENT_SOFT, "hover": "#DCE8FF", "text": T.ACCENT, "outline": "", "bold": True},
         "danger": {"fill": T.DANGER_SOFT, "hover": "#FDE4E1", "text": T.DANGER, "outline": "#F5C6C1", "bold": False},
         "ghost": {"fill": None, "hover": "#EEF2FA", "text": T.MUTED, "outline": "", "bold": False},
+        "violet": {
+            "fill": T.OBSIDIAN,
+            "hover": T.OBSIDIAN_HOVER,
+            "text": "#FFFFFF",
+            "outline": "",
+            "bold": True,
+            "ring": "#C4B5FD",
+        },
+        "teal": {
+            "fill": T.IMA,
+            "hover": T.IMA_HOVER,
+            "text": "#FFFFFF",
+            "outline": "",
+            "bold": True,
+            "ring": "#99F6E4",
+        },
+        "amber": {
+            "fill": T.AMBER,
+            "hover": T.AMBER_HOVER,
+            "text": "#FFFFFF",
+            "outline": "",
+            "bold": True,
+            "ring": "#FDE68A",
+        },
     }
+
+    ICON_SIZE = 15  # 逻辑像素：图标方框边长
+    ICON_GAP = 7  # 图标与文字的间距
+    # 合法图标名，与 _draw_icon 支持的分支保持一致
+    ICONS = frozenset(
+        {
+            "obsidian",
+            "ima",
+            "file",
+            "package",
+            "mindmap",
+            "clipboard",
+            "folder",
+            "broom",
+            "plug",
+            "log",
+            "save",
+            "book",
+        }
+    )
 
     def __init__(
         self,
@@ -96,6 +145,7 @@ class RoundButton(tk.Canvas):
         font_size: int = 10,
         padx: int = 18,
         width: int | None = None,
+        icon: str | None = None,
     ) -> None:
         self._parent_bg = T.parent_bg(master)
         self._height = T.px(height)
@@ -112,6 +162,9 @@ class RoundButton(tk.Canvas):
         self._text = text
         self._command = command
         self._kind = kind
+        self._icon = icon
+        if icon is not None and icon not in self.ICONS:
+            raise ValueError(f"未知图标名 {icon!r}，可选：{'、'.join(sorted(self.ICONS))}")
         self._radius = T.px(radius)
         self._font = T.f(font_size, "bold" if self.KINDS.get(kind, {}).get("bold") else "normal")
         self._padx = T.px(padx)
@@ -155,6 +208,8 @@ class RoundButton(tk.Canvas):
             self.configure(width=self._fixed_width)
             return
         width = tkfont.Font(font=self._font).measure(self._text) + self._padx * 2
+        if self._icon:
+            width += T.px(self.ICON_SIZE) + T.px(self.ICON_GAP)
         self.configure(width=max(width, self._min_width))
 
     def _size(self) -> tuple[int, int]:
@@ -203,10 +258,213 @@ class RoundButton(tk.Canvas):
                 height - ring,
                 max(self._radius - T.px(1), T.px(2)),
                 fill="",
-                outline=T.ACCENT,
+                outline=spec.get("ring", T.ACCENT),
                 width=inset,
             )
-        self.create_text(width / 2, height / 2, text=self._text, fill=text_color, font=self._font)
+
+        if self._icon:
+            icon_size = T.px(self.ICON_SIZE)
+            gap = T.px(self.ICON_GAP)
+            text_width = tkfont.Font(font=self._font).measure(self._text)
+            left = (width - (icon_size + gap + text_width)) / 2
+            self._draw_icon(left, (height - icon_size) / 2, icon_size, text_color, fill)
+            self.create_text(
+                left + icon_size + gap,
+                height / 2,
+                text=self._text,
+                anchor="w",
+                fill=text_color,
+                font=self._font,
+            )
+        else:
+            self.create_text(width / 2, height / 2, text=self._text, fill=text_color, font=self._font)
+
+    # ---- 图标：按 icon 方框内的相对坐标画，跟字号缩放无关 ----
+
+    def _draw_icon(self, x: float, y: float, size: float, color: str, bg: str) -> None:
+        if self._icon == "obsidian":
+            self._draw_obsidian_icon(x, y, size, color)
+        elif self._icon == "ima":
+            self._draw_ima_icon(x, y, size, color)
+        elif self._icon == "file":
+            self._draw_file_icon(x, y, size, color, bg)
+        elif self._icon == "package":
+            self._draw_package_icon(x, y, size, color, bg)
+        elif self._icon == "mindmap":
+            self._draw_mindmap_icon(x, y, size, color)
+        elif self._icon == "clipboard":
+            self._draw_clipboard_icon(x, y, size, color, bg)
+        elif self._icon == "folder":
+            self._draw_folder_icon(x, y, size, color, bg)
+        elif self._icon == "broom":
+            self._draw_broom_icon(x, y, size, color, bg)
+        elif self._icon == "plug":
+            self._draw_plug_icon(x, y, size, color)
+        elif self._icon == "log":
+            self._draw_log_icon(x, y, size, color)
+        elif self._icon == "save":
+            self._draw_save_icon(x, y, size, color, bg)
+        elif self._icon == "book":
+            self._draw_book_icon(x, y, size, color, bg)
+
+    def _draw_obsidian_icon(self, x: float, y: float, size: float, color: str) -> None:
+        """Obsidian 水晶标：上方三角棱面 + 下方三根向下内收的棱柱。"""
+
+        def pt(u: float, v: float) -> tuple[float, float]:
+            return x + u * size, y + v * size
+
+        self.create_polygon(*pt(0.5, 0.0), *pt(0.94, 0.3), *pt(0.06, 0.3), fill=color, outline="")
+        self.create_polygon(*pt(0.02, 0.42), *pt(0.26, 0.42), *pt(0.4, 1.0), *pt(0.18, 1.0), fill=color, outline="")
+        self.create_polygon(*pt(0.35, 0.42), *pt(0.65, 0.42), *pt(0.5, 0.94), fill=color, outline="")
+        self.create_polygon(*pt(0.98, 0.42), *pt(0.74, 0.42), *pt(0.6, 1.0), *pt(0.82, 1.0), fill=color, outline="")
+
+    def _draw_ima_icon(self, x: float, y: float, size: float, color: str) -> None:
+        """ima 星芒：四角闪光，内凹边。"""
+        center_x = x + size / 2
+        center_y = y + size / 2
+        radius = size / 2
+        inner = radius * 0.27
+        points = (
+            (center_x, center_y - radius),
+            (center_x + inner, center_y - inner),
+            (center_x + radius, center_y),
+            (center_x + inner, center_y + inner),
+            (center_x, center_y + radius),
+            (center_x - inner, center_y + inner),
+            (center_x - radius, center_y),
+            (center_x - inner, center_y - inner),
+        )
+        self.create_polygon(*[coord for point in points for coord in point], fill=color, outline="")
+
+    def _draw_file_icon(self, x: float, y: float, size: float, color: str, bg: str) -> None:
+        """单篇 .md：折角文档纸。"""
+
+        def pt(u: float, v: float) -> tuple[float, float]:
+            return x + u * size, y + v * size
+
+        self.create_polygon(
+            *pt(0.14, 0.0), *pt(0.60, 0.0), *pt(0.88, 0.28), *pt(0.88, 1.0), *pt(0.14, 1.0), fill=color, outline=""
+        )
+        self.create_polygon(*pt(0.60, 0.0), *pt(0.60, 0.28), *pt(0.88, 0.28), fill=bg, outline="")
+        self.create_line(*pt(0.28, 0.50), *pt(0.74, 0.50), fill=bg, width=T.px(1.5))
+        self.create_line(*pt(0.28, 0.74), *pt(0.74, 0.74), fill=bg, width=T.px(1.5))
+
+    def _draw_package_icon(self, x: float, y: float, size: float, color: str, bg: str) -> None:
+        """整库 .zip：盒盖 + 盒身 + 中间胶带。"""
+
+        def pt(u: float, v: float) -> tuple[float, float]:
+            return x + u * size, y + v * size
+
+        self.create_polygon(*pt(0.04, 0.16), *pt(0.96, 0.16), *pt(0.96, 0.40), *pt(0.04, 0.40), fill=color, outline="")
+        self.create_polygon(*pt(0.10, 0.48), *pt(0.90, 0.48), *pt(0.90, 1.0), *pt(0.10, 1.0), fill=color, outline="")
+        self.create_rectangle(*pt(0.42, 0.48), *pt(0.58, 1.0), fill=bg, outline="")
+
+    def _draw_mindmap_icon(self, x: float, y: float, size: float, color: str) -> None:
+        """HTML 脑图：上面一个节点、下面两个节点的最小树。"""
+
+        def pt(u: float, v: float) -> tuple[float, float]:
+            return x + u * size, y + v * size
+
+        self.create_line(*pt(0.5, 0.30), *pt(0.22, 0.74), fill=color, width=T.px(1.5))
+        self.create_line(*pt(0.5, 0.30), *pt(0.78, 0.74), fill=color, width=T.px(1.5))
+        for cu, cv in ((0.5, 0.22), (0.22, 0.82), (0.78, 0.82)):
+            self.create_oval(*pt(cu - 0.16, cv - 0.16), *pt(cu + 0.16, cv + 0.16), fill=color, outline="")
+
+    def _draw_clipboard_icon(self, x: float, y: float, size: float, color: str, bg: str) -> None:
+        """复制到剪贴板：写字板 + 两行文字。"""
+
+        def pt(u: float, v: float) -> tuple[float, float]:
+            return x + u * size, y + v * size
+
+        self.create_polygon(*pt(0.16, 0.14), *pt(0.84, 0.14), *pt(0.84, 1.0), *pt(0.16, 1.0), fill=color, outline="")
+        self.create_polygon(*pt(0.34, 0.02), *pt(0.66, 0.02), *pt(0.66, 0.22), *pt(0.34, 0.22), fill=color, outline="")
+        self.create_line(*pt(0.30, 0.46), *pt(0.70, 0.46), fill=bg, width=T.px(1.5))
+        self.create_line(*pt(0.30, 0.68), *pt(0.70, 0.68), fill=bg, width=T.px(1.5))
+
+    def _draw_folder_icon(self, x: float, y: float, size: float, color: str, bg: str) -> None:
+        """打开笔记库 / 浏览：文件夹——后页带标签凸起，前页盖住下半部。"""
+
+        def pt(u: float, v: float) -> tuple[float, float]:
+            return x + u * size, y + v * size
+
+        self.create_polygon(
+            *pt(0.05, 0.10),
+            *pt(0.37, 0.10),
+            *pt(0.47, 0.28),
+            *pt(0.95, 0.28),
+            *pt(0.95, 0.42),
+            *pt(0.05, 0.42),
+            fill=color,
+            outline="",
+        )
+        self.create_polygon(
+            *pt(0.05, 0.50), *pt(0.95, 0.50), *pt(0.95, 0.92), *pt(0.05, 0.92), fill=color, outline=""
+        )
+
+    def _draw_broom_icon(self, x: float, y: float, size: float, color: str, bg: str) -> None:
+        """清理本地缓存：扫帚——竖柄 + 外扩刷头 + 束腰与刷毛纹。"""
+
+        def pt(u: float, v: float) -> tuple[float, float]:
+            return x + u * size, y + v * size
+
+        self.create_line(*pt(0.50, 0.02), *pt(0.50, 0.42), fill=color, width=T.px(2.4))
+        self.create_polygon(
+            *pt(0.30, 0.46), *pt(0.70, 0.46), *pt(0.86, 0.96), *pt(0.14, 0.96), fill=color, outline=""
+        )
+        self.create_line(*pt(0.31, 0.56), *pt(0.69, 0.56), fill=bg, width=T.px(1.5))
+        self.create_line(*pt(0.36, 0.66), *pt(0.30, 0.92), fill=bg, width=T.px(1.5))
+        self.create_line(*pt(0.50, 0.66), *pt(0.50, 0.92), fill=bg, width=T.px(1.5))
+        self.create_line(*pt(0.64, 0.66), *pt(0.70, 0.92), fill=bg, width=T.px(1.5))
+
+    def _draw_plug_icon(self, x: float, y: float, size: float, color: str) -> None:
+        """测试连接：电源插头——两只插脚 + 插身 + 下垂电线。"""
+
+        def pt(u: float, v: float) -> tuple[float, float]:
+            return x + u * size, y + v * size
+
+        self.create_rectangle(*pt(0.28, 0.02), *pt(0.40, 0.22), fill=color, outline="")
+        self.create_rectangle(*pt(0.60, 0.02), *pt(0.72, 0.22), fill=color, outline="")
+        self.create_rectangle(*pt(0.16, 0.22), *pt(0.84, 0.56), fill=color, outline="")
+        self.create_line(*pt(0.50, 0.56), *pt(0.50, 0.98), fill=color, width=T.px(2.4))
+
+    def _draw_log_icon(self, x: float, y: float, size: float, color: str) -> None:
+        """打开清理日志：三行带项目符号的日志清单。"""
+
+        def pt(u: float, v: float) -> tuple[float, float]:
+            return x + u * size, y + v * size
+
+        for v in (0.22, 0.50, 0.78):
+            self.create_oval(*pt(0.08, v - 0.08), *pt(0.22, v + 0.08), fill=color, outline="")
+            self.create_line(*pt(0.32, v), *pt(0.94, v), fill=color, width=T.px(1.8))
+
+    def _draw_save_icon(self, x: float, y: float, size: float, color: str, bg: str) -> None:
+        """保存：软盘——方身 + 顶部滑片缺口 + 下方标签。"""
+
+        def pt(u: float, v: float) -> tuple[float, float]:
+            return x + u * size, y + v * size
+
+        T.draw_round_rect(self, *pt(0.10, 0.06), *pt(0.90, 0.94), T.px(2), fill=color, outline="")
+        self.create_rectangle(*pt(0.34, 0.06), *pt(0.66, 0.28), fill=bg, outline="")
+        self.create_rectangle(*pt(0.24, 0.52), *pt(0.76, 0.90), fill=bg, outline="")
+        self.create_line(*pt(0.30, 0.64), *pt(0.70, 0.64), fill=color, width=T.px(1.5))
+
+    def _draw_book_icon(self, x: float, y: float, size: float, color: str, bg: str) -> None:
+        """说明书：摊开的书——左右两页 + 中缝 + 页内文字线。"""
+
+        def pt(u: float, v: float) -> tuple[float, float]:
+            return x + u * size, y + v * size
+
+        self.create_polygon(
+            *pt(0.04, 0.16), *pt(0.47, 0.23), *pt(0.47, 0.92), *pt(0.04, 0.84), fill=color, outline=""
+        )
+        self.create_polygon(
+            *pt(0.53, 0.23), *pt(0.96, 0.16), *pt(0.96, 0.84), *pt(0.53, 0.92), fill=color, outline=""
+        )
+        for v in (0.44, 0.60, 0.74):
+            end = 0.38 if v < 0.7 else 0.30
+            self.create_line(*pt(0.14, v), *pt(end, v + 0.03), fill=bg, width=T.px(1.4))
+            end = 0.62 if v < 0.7 else 0.70
+            self.create_line(*pt(end, v + 0.03), *pt(0.86, v - 0.03), fill=bg, width=T.px(1.4))
 
     def _on_enter(self, _event=None) -> None:
         self._hover = True

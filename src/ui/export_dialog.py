@@ -156,7 +156,8 @@ class ExportDialog(tk.Toplevel):
             f"保持现状：处理完成的结果自动归档进笔记库。{self._vault}",
             "打开笔记库",
             self._open_vault,
-            kind="ghost",
+            kind="soft",
+            icon="folder",
         )
         self._action_row(
             abody,
@@ -164,6 +165,8 @@ class ExportDialog(tk.Toplevel):
             "把选中的笔记保存为独立的 Markdown 文件，标题、层级、重点、标签与思维导图都会保留。",
             "导出选中 .md",
             self._export_selected_md,
+            kind="primary",
+            icon="file",
         )
         self._action_row(
             abody,
@@ -171,6 +174,8 @@ class ExportDialog(tk.Toplevel):
             "把整个笔记库打包，方便换机器或发给别人；可用系统压缩工具直接解压。",
             "导出整库 .zip",
             self._export_zip,
+            kind="violet",
+            icon="package",
         )
         self._action_row(
             abody,
@@ -178,6 +183,8 @@ class ExportDialog(tk.Toplevel):
             "生成单文件网页，双击即可在浏览器查看笔记层级、思维导图与笔记间关系，不需要安装任何软件。",
             "导出 HTML 脑图",
             self._export_html,
+            kind="teal",
+            icon="mindmap",
         )
         self._action_row(
             abody,
@@ -185,6 +192,8 @@ class ExportDialog(tk.Toplevel):
             "把最新一篇的 Markdown 全文复制到剪贴板，可直接粘贴到别的笔记软件。",
             "复制最新一篇",
             self._copy_latest,
+            kind="amber",
+            icon="clipboard",
             last=True,
         )
 
@@ -213,6 +222,7 @@ class ExportDialog(tk.Toplevel):
         command,
         kind: str = "secondary",
         last: bool = False,
+        icon: str | None = None,
     ) -> RoundButton:
         row = tk.Frame(parent, bg=T.CARD)
         row.pack(fill="x", pady=(0, 0 if last else T.px(12)))
@@ -229,7 +239,7 @@ class ExportDialog(tk.Toplevel):
             justify="left",
             wraplength=T.px(470),
         ).pack(fill="x", pady=(T.px(2), 0))
-        button = RoundButton(row, button_text, command=command, kind=kind, height=32, font_size=9)
+        button = RoundButton(row, button_text, command=command, kind=kind, height=32, font_size=9, icon=icon)
         button.pack(side="right", padx=(T.px(12), 0))
         self._action_buttons.append(button)
         return button

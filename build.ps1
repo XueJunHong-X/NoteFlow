@@ -11,6 +11,8 @@
 param(
     [switch]$SkipInstall,
     [switch]$Console,
+    # 产物版本号：写进包内 VERSION.txt，发布 zip 与 GitHub Release 同名
+    [string]$Version = "0.1.2",
     # 产物输出根目录（默认沿用备赛目录；公开仓库使用者可改成 .\dist）
     [string]$DistRoot = "2026-11-11\note-flow-competition\outputs"
 )
@@ -63,6 +65,14 @@ Copy-Item $IconFile -Destination $IconStage -Force
 $IconData = $IconStage + ";assets\icon"
 Write-Host "      应用图标: $IconFile" -ForegroundColor DarkGray
 
+# 本地离线说明书：设置页「说明书」按钮直接打开这份 HTML，打包后也要在
+$ManualFile = Join-Path $RepoRoot "docs\byok-guide.html"
+if (-not (Test-Path $ManualFile)) {
+    throw "找不到本地说明书：$ManualFile"
+}
+$ManualData = $ManualFile + ";docs"
+Write-Host "      离线说明书: $ManualFile" -ForegroundColor DarkGray
+
 $ArgsList = @(
     "--noconfirm",
     "--clean",
@@ -76,6 +86,8 @@ $ArgsList = @(
     "--add-data", $SampleData,
     # 图标打进包内，运行时设置窗口图标用
     "--add-data", $IconData,
+    # 本地离线说明书打进包内，设置页「说明书」按钮直接打开
+    "--add-data", $ManualData,
     # 这几个模块是运行时才 import 的，PyInstaller 静态分析看不到
     "--hidden-import", "cv2",
     "--hidden-import", "numpy",
@@ -95,6 +107,9 @@ $ArgsList = @(
     "--hidden-import", "src.watcher",
     "--hidden-import", "src.failure_log",
     "--hidden-import", "src.onedrive",
+    "--hidden-import", "src.cleanup",
+    "--hidden-import", "src.manifest",
+    "--hidden-import", "send2trash",
     "--hidden-import", "src.appconfig",
     "--hidden-import", "src.offline_samples",
     "--hidden-import", "src.resources",
@@ -103,6 +118,7 @@ $ArgsList = @(
     "--hidden-import", "src.ui.theme",
     "--hidden-import", "src.ui.widgets",
     "--hidden-import", "src.ui.settings_dialog",
+    "--hidden-import", "src.ui.cleanup_dialog",
     "--hidden-import", "src.ui.app",
     "--hidden-import", "windnd",
     # 体积控制：这些可选依赖用不到
@@ -132,6 +148,7 @@ $Exe = Join-Path $DistPath "NoteFlow\NoteFlow.exe"
 if (-not (Test-Path $Exe)) {
     throw "打包结束但找不到 $Exe"
 }
+Set-Content -Path (Join-Path $DistPath "NoteFlow\VERSION.txt") -Value "v$Version" -Encoding utf8
 
 # 体积裁剪：这两块运行时用不到，PyInstaller 的 hook 会把它们整包收进来。
 # opencv 的视频 I/O 编解码库（只做静态图处理）、PyMuPDF 的版面/表格 ONNX 模型（只做页面栅格化）。
@@ -152,6 +169,7 @@ foreach ($dir in $Prune) {
 $SizeMB = [math]::Round(((Get-ChildItem (Split-Path $Exe) -Recurse | Measure-Object Length -Sum).Sum / 1MB), 1)
 
 Write-Host "[4/4] 完成" -ForegroundColor Green
+Write-Host "      版本  : v$Version"
 Write-Host "      exe   : $Exe"
 Write-Host "      体积  : $SizeMB MB（整个 NoteFlow 目录）"
 Write-Host "      自检  : & `"$Exe`" --selftest"
